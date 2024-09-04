@@ -1,0 +1,3 @@
+/backend/bin
+/backend/pkg/mod
+/backend/go.sum
