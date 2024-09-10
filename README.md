@@ -1,2 +1,5 @@
 # Cocktaildle
-todo: cocktaildb api -> use auth -> front -> unlimited random games
+**Cocktaildle** — это ежедневная игра, в которой пользователи пытаются угадать коктейль по подсказкам, связанным с категориями напитка. У каждого игрока есть 6 попыток в день, чтобы угадать правильный коктейль, и по мере угадывания им предоставляется обратная связь, например, совпадение спиртов или категорий между загаданным и предложенным коктейлями. 
+Использует [TheCocktailDB API](https://www.thecocktaildb.com/api.php).
+
+todo: parse & match ingredients, random games, front 
