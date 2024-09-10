@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/111zxc/cocktaildle/backend/internal/middleware"
-	"github.com/111zxc/cocktaildle/backend/internal/models"
 	"github.com/111zxc/cocktaildle/backend/internal/services"
 )
 
@@ -18,59 +17,53 @@ func NewGameHandler(gameService *services.GameService) *GameHandler {
 }
 
 func (h *GameHandler) StartGameHandler(w http.ResponseWriter, r *http.Request) {
-	// Извлекаем user_id из контекста
 	userID, ok := r.Context().Value(middleware.UserContextKey).(string)
 	if !ok {
-		http.Error(w, "Unable to retrieve user_id", http.StatusUnauthorized)
+		services.RespondWithError(w, http.StatusUnauthorized, "Unable to retrieve user_id")
 		return
 	}
 
-	// Вызываем логику для начала игры
 	gameAttempt, err := h.gameService.StartGameForUser(userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		services.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(gameAttempt)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"game":    gameAttempt,
+	})
 }
 
 func (h *GameHandler) SubmitGuessHandler(w http.ResponseWriter, r *http.Request) {
-	// Извлекаем user_id из контекста
 	userID, ok := r.Context().Value(middleware.UserContextKey).(string)
 	if !ok {
-		http.Error(w, "Unable to retrieve user_id", http.StatusUnauthorized)
+		services.RespondWithError(w, http.StatusUnauthorized, "Unable to retrieve user_id")
 		return
 	}
 
-	// Читаем догадку пользователя из тела запроса
 	var input struct {
 		Guess string `json:"guess"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		services.RespondWithError(w, http.StatusBadRequest, "Invalid input")
 		return
 	}
 
-	// Вызываем логику для обработки догадки
 	guess, details, err := h.gameService.SubmitGuess(userID, input.Guess)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		services.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
-	}
-
-	response := struct {
-		Guess   *models.Guess   `json:"guess"`
-		Details map[string]bool `json:"details"`
-	}{
-		Guess:   guess,
-		Details: details,
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"guess":   guess,
+		"details": details,
+	})
 }
 
 func (h *GameHandler) GetDailyGameHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,17 +71,20 @@ func (h *GameHandler) GetDailyGameHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		cocktail, err := services.GetRandomCocktail()
 		if err != nil {
-			http.Error(w, "Failed to fetch random cocktail", http.StatusInternalServerError)
+			services.RespondWithError(w, http.StatusInternalServerError, "Failed to fetch random cocktail")
 			return
 		}
 
 		dailyGame, err = h.gameService.CreateDailyGame(cocktail.IDDrink)
 		if err != nil {
-			http.Error(w, "Failed to create daily game", http.StatusInternalServerError)
+			services.RespondWithError(w, http.StatusInternalServerError, "Failed to create daily game")
 			return
 		}
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(dailyGame)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"game":    dailyGame,
+	})
 }

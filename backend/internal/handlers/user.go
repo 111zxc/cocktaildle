@@ -25,18 +25,21 @@ func (h *UserHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		services.RespondWithError(w, http.StatusBadRequest, "Invalid input")
 		return
 	}
 
 	user, err := h.userService.CreateUser(input.Username, input.Email, input.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		services.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"user":    user,
+	})
 }
 
 func (h *UserHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -46,18 +49,21 @@ func (h *UserHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		services.RespondWithError(w, http.StatusBadRequest, "Invalid input")
 		return
 	}
 
 	token, err := h.userService.AuthenticateUser(input.Email, input.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		services.RespondWithError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"token":   token,
+	})
 }
 
 func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +76,7 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		services.RespondWithError(w, http.StatusBadRequest, "Invalid input")
 		return
 	}
 
@@ -82,10 +88,13 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	user, err := h.userService.UpdateUserByID(userID, updatedUser)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		services.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"user":    user,
+	})
 }
