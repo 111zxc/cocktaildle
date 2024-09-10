@@ -6,6 +6,7 @@ import (
 
 	"github.com/111zxc/cocktaildle/backend/internal/db"
 	"github.com/111zxc/cocktaildle/backend/internal/handlers"
+	"github.com/111zxc/cocktaildle/backend/internal/middleware"
 	"github.com/111zxc/cocktaildle/backend/internal/services"
 	"github.com/gorilla/mux"
 )
@@ -21,13 +22,13 @@ func main() {
 
 	r := mux.NewRouter()
 
+	r.Handle("/api/game/start", middleware.JWTAuthMiddleware(http.HandlerFunc(gameHandler.StartGameHandler))).Methods("POST")
+	r.Handle("/api/game/guess", middleware.JWTAuthMiddleware(http.HandlerFunc(gameHandler.SubmitGuessHandler))).Methods("POST")
+	r.Handle("/api/user/{id}", middleware.JWTAuthMiddleware(http.HandlerFunc(userHandler.UpdateUserHandler))).Methods("PUT")
+
 	r.HandleFunc("/api/register", userHandler.RegisterHandler).Methods("POST")
 	r.HandleFunc("/api/login", userHandler.LoginHandler).Methods("POST")
-	r.HandleFunc("/api/user/{id}", userHandler.UpdateUserHandler).Methods("PUT")
-
-	r.HandleFunc("/game/start/{userID}", gameHandler.StartGameHandler).Methods("POST")
-	r.HandleFunc("/game/guess/{userID}", gameHandler.SubmitGuessHandler).Methods("POST")
-	r.HandleFunc("/game/daily", gameHandler.GetDailyGameHandler).Methods("GET")
+	r.HandleFunc("/api/game/daily", gameHandler.GetDailyGameHandler).Methods("GET")
 
 	http.Handle("/", r)
 	log.Println("Starting server on :8080")
